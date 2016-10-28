@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">News List</string>
+    <string-array name="planets_array">
+        <item>Ars Technica</item>
+        <item>CNN</item>
+        <item>Google</item>
+        <item>IGN</item>
+        <item>TechCrunch</item>
+        <item>Reddit</item>
+        <item>The Verge</item>
+        <item>TIME</item>
+    </string-array>
+</resources>
