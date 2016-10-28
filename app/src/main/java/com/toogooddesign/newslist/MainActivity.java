@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                 String imageURL = firstArticle.getString("urlToImage");
                 Bitmap ourImg = BitmapFactory.decodeResource(null,
                         R.drawable.questionmark);
-                int ayy;
+                int ay;
                 Bitmap bitmapScaled;
                 Bitmap icon = null;
                 try {
