@@ -1,17 +1,13 @@
 package com.toogooddesign.newslist;
 
-
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -19,10 +15,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.TextView;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,18 +32,42 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
     String selectedDrop;
     String theFinalURL;
-
+    ProgressBar theBar;
+    Boolean hasInternet;
+    ArrayList<NewsArticle> news_articles_array_list = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        hasInternet = checkConnect();
         setSpinner();
+    }
+
+    public Boolean checkConnect(){
+        ConnectivityManager connection = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connection.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+
+            View loadingIndicator = findViewById(R.id.progressBar);
+            loadingIndicator.setVisibility(View.VISIBLE);
+            TextView connectionT = (TextView) findViewById(R.id.connectionText);
+            connectionT.setVisibility(View.GONE);
+            return true;
+        }
+        else {
+            View loadingIndicator = findViewById(R.id.progressBar);
+            loadingIndicator.setVisibility(View.INVISIBLE);
+            TextView connectionT = (TextView) findViewById(R.id.connectionText);
+            connectionT.setText("No internet connection, try again later");
+            connectionT.setVisibility(View.VISIBLE);
+            return false;
+        }
     }
 
     public void getURL(String drop){
@@ -87,10 +108,11 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
+
     public void setSpinner(){
         Spinner theSpin = (Spinner) findViewById(R.id.spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.planets_array, R.layout.spinner);
+                R.array.sources_list, R.layout.spinner);
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         theSpin.setAdapter(adapter);
@@ -100,40 +122,45 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapter, View v,
                                        int position, long id) {
                 selectedDrop = adapter.getItemAtPosition(position).toString();
-                getURL(selectedDrop);
+
+
+                if(hasInternet) {
+                    getURL(selectedDrop);
+                }
             }
             @Override
             public void onNothingSelected(AdapterView<?> arg0) {
-                // TODO Auto-generated method stub
             }
         });
     }
 
     public class getNewsTask extends AsyncTask<URL,Void,Void> {
         @Override
+        protected void onPreExecute(){
+            theBar = (ProgressBar) findViewById(R.id.progressBar);
+            theBar.setVisibility(View.VISIBLE);
+        }
 
         protected Void doInBackground(URL... urls){
             URL newURL = createURL(theFinalURL);
-            String jsonReturned = "";
+            String jsonReturned;
             try{
                 news_articles_array_list.clear();
                 jsonReturned = makeRequest(newURL);
                 extractInfo(jsonReturned);
             }
             catch(IOException e){
-                //TODO Handle IO Exception here
+                e.printStackTrace();
             }
             return null;
-
         }
 
         protected void onPostExecute(Void result){
             updateUI();
+            theBar = (ProgressBar) findViewById(R.id.progressBar);
+            theBar.setVisibility(View.GONE);
         }
-
     }
-
-    ArrayList<NewsArticle> news_articles_array_list = new ArrayList<>();
 
     private void updateUI(){
         ListView newsArticleListView = (ListView) findViewById(R.id.list);
@@ -152,10 +179,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
     //Takes string as an argument and returns a URL object
     private URL createURL(String stringUrl) {
-        URL url = null;
+        URL url;
         try {
             url = new URL(stringUrl);
         }
@@ -166,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
         return url;
     }
 
-    //Makes HTTP request Connection and begins the parsing of the JSON
     private String makeRequest(URL url) throws IOException {
         String jsonReturned = "";
         HttpURLConnection urlConnection = null;
@@ -175,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.setReadTimeout(10000);
-            urlConnection.setConnectTimeout(15000);
+            urlConnection.setConnectTimeout(20000);
             urlConnection.connect();
             int code = urlConnection.getResponseCode();
             if(code!=200){
@@ -189,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         catch(IOException e){
-            //TODO Catch exception
+            e.printStackTrace();
         }
         finally{
             if (urlConnection != null) {
@@ -232,11 +257,9 @@ public class MainActivity extends AppCompatActivity {
                 String url = firstArticle.getString("url");
                 String date = firstArticle.optString("publishedAt");
                 String imageURL = firstArticle.getString("urlToImage");
-                Bitmap ourImg = BitmapFactory.decodeResource(null,
-                        R.drawable.questionmark);
-                int ay;
                 Bitmap bitmapScaled;
                 Bitmap icon = null;
+
                 try {
                     InputStream in = new java.net.URL(imageURL).openStream();
                     icon = BitmapFactory.decodeStream(in);
@@ -249,22 +272,17 @@ public class MainActivity extends AppCompatActivity {
                     bitmapScaled = Bitmap.createScaledBitmap(icon, 1250, 1250, true);
                 }
                 else{
-                    bitmapScaled = BitmapFactory.decodeResource(null,
-                            R.drawable.questionmark);
+                    bitmapScaled = BitmapFactory.decodeResource(null, R.drawable.questionmark);
                 }
-
                 news_articles_array_list.add(new NewsArticle(title, author, date, url,imageURL,bitmapScaled));
             }
             return null;
-
             }
 
         catch(JSONException e){
-            //TODO Handle JSON Exception
+            Log.e("Error", e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
-
-
-
 }

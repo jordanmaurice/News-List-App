@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#BDBDBD">
+    android:background="#90CAF9">
 
     <LinearLayout
         android:orientation="horizontal"
@@ -22,15 +22,31 @@
             android:paddingLeft="5dp" />
     </LinearLayout>
 
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_gravity="center_horizontal" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/connectionText"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone" />
+
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/list"
+
+        android:elevation="3dp"
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    style="@style/ListViewStyle.Light"
-    android:layout_marginLeft="10dp"
+        android:layout_marginLeft="10dp"
     android:layout_marginTop="10dp"
-    android:layout_marginRight="10dp">
+    android:layout_marginRight="10dp"
+        android:dividerHeight="5dp">
 
 </ListView>
 </LinearLayout>

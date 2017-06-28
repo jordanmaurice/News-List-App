@@ -12,6 +12,7 @@ public class NewsArticle {
     private String url;
     private String imageUrl;
     private Bitmap img;
+
     public NewsArticle(String mTitle,String mAuthor, String mDatePublished, String mUrl, String mImageUrl,Bitmap mImage){
         if(mTitle == "null"){
             title = "No title specified";
@@ -37,27 +38,19 @@ public class NewsArticle {
 
     }
 
-    public String getTitle(){
-        return title;
-    }
-    public void  setBitmap(Bitmap in){
-        img = in;
-    }
+    public String getTitle(){return title;}
     public String getauthor(){
         return author;
     }
-
     public String getdatePublished(){
         return datePublished;
     }
-
     public Bitmap getImage(){
         return img;
     }
     public String getURL(){
         return url;
     }
-
     public String getImageUrl(){
         return imageUrl;
     }
